@@ -2,11 +2,12 @@
 
 ## what?
 
-// what does this PR do? 
+<!-- what does this PR do? -->
+
 
 ## tests
 
-// how did you validate
+<!-- how did you validate these changes? -->
 
 ## requirements
 
