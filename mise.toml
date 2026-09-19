@@ -1,0 +1,4 @@
+[tools]
+aws-cdk = "latest"
+node = "latest"
+uv = "latest"
