@@ -5,7 +5,7 @@ Provides a CRUD interface for managing a database of books
 from collections.abc import Generator
 from datetime import datetime
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -13,7 +13,8 @@ from app.database import SessionLocal, engine
 from app.models import Base, Book, BookCreate
 
 Base.metadata.create_all(bind=engine)
-app = FastAPI(root_path="/api/v1")
+app = FastAPI()
+router = APIRouter(prefix="/api/v1")
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
@@ -23,16 +24,16 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
-@app.get("/")
+@router.get("/")
 async def root():
     return {"message": "Hello World"}
 
-@app.get("/books")
+@router.get("/books")
 async def read_books(db: Session = Depends(get_db)):
     result = db.scalars(select(Book)).all()
     return result
 
-@app.get("/books/{item_id}")
+@router.get("/books/{item_id}")
 async def read_book(item_id: int, db: Session = Depends(get_db)):
     statement = select(Book).where(Book.id == item_id)
     book = db.scalars(statement).first()
@@ -40,7 +41,7 @@ async def read_book(item_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Book not found")
     return book
 
-@app.post("/books")
+@router.post("/books")
 async def create_book(body: BookCreate, db: Session = Depends(get_db)):
     book = Book(
         title=body.title,
@@ -53,7 +54,7 @@ async def create_book(body: BookCreate, db: Session = Depends(get_db)):
     db.refresh(book)
     return book
 
-@app.put("/books/{id}")
+@router.put("/books/{id}")
 async def update_book(id: int, body: BookCreate, db: Session = Depends(get_db)):
     statement = select(Book).where(Book.id == id)
     book = db.scalars(statement).first()
@@ -67,7 +68,7 @@ async def update_book(id: int, body: BookCreate, db: Session = Depends(get_db)):
     db.refresh(book)
     return book
 
-@app.delete("/books/{id}")
+@router.delete("/books/{id}")
 async def delete_book(id: int, db: Session = Depends(get_db)):
     statement = select(Book).where(Book.id == id)
     book = db.scalars(statement).first()
@@ -79,3 +80,5 @@ async def delete_book(id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return book
+
+app.include_router(router)

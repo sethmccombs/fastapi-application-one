@@ -14,4 +14,4 @@ N/A
 - [ ] - tests
 - [ ] - docs
 - [ ] - passing build
-- [ ] - etc 
+- [ ] - other 
