@@ -2,19 +2,15 @@
 
 Provides a CRUD interface for managing a database of books
 """
-from app.database import engine
-from app.models import Base, Book, BookCreate
-from datetime import datetime
-from fastapi import HTTPException
-from typing import Any
-from fastapi import FastAPI
 from collections.abc import Generator
+from datetime import datetime
 
-from fastapi import Depends
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
-from sqlalchemy import select
+from app.database import SessionLocal, engine
+from app.models import Base, Book, BookCreate
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(root_path="/api/v1")
