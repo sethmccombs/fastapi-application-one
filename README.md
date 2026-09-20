@@ -17,17 +17,11 @@ uv sync
 ## run application (local) 
 
 ```shell
-uv run fastapi dev --port 8080
+docker compose up --build
 ```
 
 ## build container
 
 ```shell
 docker build . -t <image name>:<image tag>
-```
-
-## run container locally
-
-```shell
-docker run --rm -p 8080:8080 <image name>:<image tag>
 ```
