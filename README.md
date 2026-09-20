@@ -3,7 +3,7 @@ application repo for a basic FastAPI application, and it's AWS CDK based infrast
 
 ## developing
 
-## install tools
+###  install tools
 
 This repo uses [mise](https://mise.jdx.dev) for version control
 Once `mise` is installed, you can use `mise install` from the root of the repo to install needed tools (`uv`, `aws-cdk`, etc)
