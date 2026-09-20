@@ -5,10 +5,13 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL.replace("postgresql://", "postgresql+psycopg://")
+)
 
 SessionLocal = sessionmaker(
     bind=engine,
     autoflush=False,
     autocommit=False,
 )
+
