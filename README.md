@@ -1,17 +1,24 @@
 # fastapi-application-one
 application repo for a basic FastAPI application, and it's AWS CDK based infrastructure 
 
-## set up repo
+## developing
+
+## install tools
 
 This repo uses [mise](https://mise.jdx.dev) for version control
-Once `mise` is installed, you can use `mise install` from the root of the repo to install dependencies
+Once `mise` is installed, you can use `mise install` from the root of the repo to install needed tools (`uv`, `aws-cdk`, etc)
+
+## install dependencies 
+
+```shell
+uv sync
+```
 
 ## run application (local) 
 
 ```shell
 uv run fastapi dev --port 8080
 ```
-
 
 ## build container
 
