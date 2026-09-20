@@ -1,16 +1,30 @@
-name: App One Build & Release
+# this workflow will trigger on PRs to build the application's container image
+# will compute the desired versions of App One and App Two (separate repo) to deploy to an ECS preview environment
+# then calls the shared workflow in the infra-control-tower repo to deploy the ephemeral dev env stack
+
+name: App One Build & Preview
 
 on:
-  - pull_request
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  build-image:
+  build-and-push:
+    name: Build and push image
+    if: github.event_name == 'push' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -21,10 +35,68 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      # this is a little bit of a mess to read
+      # if a PR - use the PR's HEAD SHA, otherwise use the github.sha
+      # if a push to main, add the `latest` tag, if a PR, just use the computed tag
+      - name: Compute image tags
+        id: tags
+        run: |
+          SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          TAGS="453071067280.dkr.ecr.us-west-2.amazonaws.com/take-homes/app-one:${SHA}"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAGS="${TAGS},453071067280.dkr.ecr.us-west-2.amazonaws.com/take-homes/app-one:latest"
+          fi
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
       - name: Build and push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # 7.4.0
         with:
           push: true
-          tags: |
-            453071067280.dkr.ecr.us-west-2.amazonaws.com/take-homes/app-one:${{ github.sha }}
-            453071067280.dkr.ecr.us-west-2.amazonaws.com/take-homes/app-one:latest
+          tags: ${{ steps.tags.outputs.tags }}
+
+  # calls the workflow in the control tower repo to trigger an ephemeral env build
+  dispatch-preview:
+    name: Trigger preview deploy
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch repository_dispatch deploy event
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.CONTROL_TOWER_TOKEN }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'sethmccombs',
+              repo: 'infra-control-tower',
+              event_type: 'deploy',
+              client_payload: {
+                repo: 'app-one',
+                pr: context.payload.pull_request.number,
+                sha: context.payload.pull_request.head.sha,
+                branch: context.payload.pull_request.head.ref,
+              },
+            });
+
+  # calls the workflow in the control tower repo to trigger an ephemeral env teardown
+  dispatch-teardown:
+    name: Trigger preview teardown
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch repository_dispatch destroy event
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.CONTROL_TOWER_TOKEN }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'sethmccombs',
+              repo: 'infra-control-tower',
+              event_type: 'destroy',
+              client_payload: {
+                repo: 'app-one',
+                pr: context.payload.pull_request.number,
+                sha: context.payload.pull_request.head.sha,
+                branch: context.payload.pull_request.head.ref,
+              },
+            });
