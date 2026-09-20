@@ -2,16 +2,16 @@
 
 ## what?
 
-<!-- what does this PR do? -->
-
+initial repo creation/setup
 
 ## tests
 
-<!-- how did you validate these changes? -->
+N/A
+
 
 ## requirements
 
-[] - tests
-[] - docs
-[] - passing build
-[] - etc 
+- [ ] - tests
+- [ ] - docs
+- [ ] - passing build
+- [ ] - other 
