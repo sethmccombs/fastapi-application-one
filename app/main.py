@@ -27,24 +27,6 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
-data = [
-    {
-        "id": 1,
-        "title": "The Fellowship of the Ring",
-        "description": "The first book in the Lord of the Rings trilogy",
-        "status": "read",
-        "created_at": datetime.now(),
-    },
-    {
-        "id": 2,
-        "title": "The Two Towers",
-        "description": "The second book in the Lord of the Rings trilogy",
-        "status": "read",
-        "created_at": datetime.now(),
-    },
-]
-
-
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
